@@ -1,8 +1,13 @@
 
 import { Button, Card, CardBody, Chip } from "@heroui/react"
 import { FileText, FolderPlus, MessageSquare, Upload } from "lucide-react"
+import { useNavigate } from "raviger"
 
 export default function LandingPage() {
+    const navigate = useNavigate();
+    const handleNavigate = () => {
+        navigate('/login')
+    }
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
@@ -15,6 +20,7 @@ export default function LandingPage() {
             <span className="text-xl font-bold text-gray-900">PDFChat</span>
           </div>
           <Button
+            onPress={handleNavigate}
             color="primary"
             variant="solid"
             size="lg"
@@ -43,6 +49,7 @@ export default function LandingPage() {
           </p>
 
           <Button
+            onPress={handleNavigate}
             color="primary"
             size="lg"
             className="bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold px-8 py-3 text-lg"
@@ -171,6 +178,7 @@ export default function LandingPage() {
             Join thousands of users who are already chatting with their PDFs and getting instant insights.
           </p>
           <Button
+            onPress={handleNavigate}
             color="default"
             size="lg"
             className="bg-white text-blue-600 font-semibold px-8 py-3 text-lg hover:bg-gray-50"

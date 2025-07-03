@@ -1,37 +1,69 @@
+import type React from "react";
 
-import type React from "react"
+import { useState } from "react";
+import { Button, Card, CardBody, Input, Link, Tab, Tabs } from "@heroui/react";
+import { toast } from "react-hot-toast";
+import { FileText, Eye, EyeOff, Mail, Lock, User } from "lucide-react";
+import { useAuthHook } from "../../hooks/useAuth";
 
-import { useState } from "react"
-import { Button, Card, CardBody, Input, Link, Tab, Tabs, Divider, Checkbox } from "@heroui/react"
-import { FileText, Eye, EyeOff, Mail, Lock, User } from "lucide-react"
+type SelectedTab = "signin" | "signup";
 
 export default function AuthPage() {
-  const [selected, setSelected] = useState("signin")
-  const [isVisible, setIsVisible] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-
-  const toggleVisibility = () => setIsVisible(!isVisible)
+  const [selected, setSelected] = useState<SelectedTab>("signin");
+  const [isVisible, setIsVisible] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPass, setConfirmPass] = useState("");
+  const { signIn, signUp, isAuthenticating } = useAuthHook();
+  const toggleVisibility = () => setIsVisible(!isVisible);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-    setIsLoading(false)
-  }
+    e.preventDefault();
+
+    try {
+      if (selected === "signup") {
+        if (password !== confirmPass) {
+          toast.error("Passwords do not match");
+          return;
+        }
+        if (!name || !email || !password) {
+          toast.error("Please fill all fields");
+          return;
+        }
+
+        await signUp({ name, email, password });
+      } else {
+        if (!email || !password) {
+          toast.error("Please enter email and password");
+          return;
+        }
+
+        await signIn({ email, password });
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Authentication failed");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col">
       {/* Header */}
       <header className="container mx-auto px-4 py-6">
         <nav className="flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-2 text-foreground">
+          <Link
+            href="/"
+            className="flex items-center space-x-2 text-foreground"
+          >
             <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
               <FileText className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-bold text-gray-900">PDFChat</span>
           </Link>
-          <Link href="/" className="text-gray-600 hover:text-gray-900 font-medium">
+          <Link
+            href="/"
+            className="text-gray-600 hover:text-gray-900 font-medium"
+          >
             ← Back to Home
           </Link>
         </nav>
@@ -57,7 +89,7 @@ export default function AuthPage() {
               {/* Tabs */}
               <Tabs
                 selectedKey={selected}
-                onSelectionChange={(key) => setSelected(key as string)}
+                onSelectionChange={(key) => setSelected(key as SelectedTab)}
                 className="w-full mb-6"
                 classNames={{
                   tabList: "grid w-full grid-cols-2 bg-gray-100 p-1 rounded-lg",
@@ -75,7 +107,8 @@ export default function AuthPage() {
                 {selected === "signup" && (
                   <Input
                     type="text"
-                    // label="Full Name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
                     placeholder="Enter your full name"
                     startContent={<User className="w-4 h-4 text-gray-400" />}
                     variant="bordered"
@@ -89,23 +122,32 @@ export default function AuthPage() {
 
                 <Input
                   type="email"
-                //   label="Email"
+                  //   label="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email"
                   startContent={<Mail className="w-4 h-4 text-gray-400" />}
                   variant="bordered"
                   classNames={{
                     input: "text-gray-900 outline-none",
-                    inputWrapper: "border-gray-200 hover:border-blue-400 focus-within:border-blue-600",
+                    inputWrapper:
+                      "border-gray-200 hover:border-blue-400 focus-within:border-blue-600",
                   }}
                   required
                 />
 
                 <Input
-                //   label="Password"
+                  //   label="Password"
                   placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   startContent={<Lock className="w-4 h-4 text-gray-400" />}
                   endContent={
-                    <button className="focus:outline-none" type="button" onClick={toggleVisibility}>
+                    <button
+                      className="focus:outline-none"
+                      type="button"
+                      onClick={toggleVisibility}
+                    >
                       {isVisible ? (
                         <EyeOff className="w-4 h-4 text-gray-400" />
                       ) : (
@@ -117,7 +159,8 @@ export default function AuthPage() {
                   variant="bordered"
                   classNames={{
                     input: "text-gray-900 outline-none",
-                    inputWrapper: "border-gray-200 hover:border-blue-400 focus-within:border-blue-600",
+                    inputWrapper:
+                      "border-gray-200 hover:border-blue-400 focus-within:border-blue-600",
                   }}
                   required
                 />
@@ -125,44 +168,49 @@ export default function AuthPage() {
                 {selected === "signup" && (
                   <Input
                     // label="Confirm Password"
+                    value={confirmPass}
+                    onChange={(e) => setConfirmPass(e.target.value)}
                     placeholder="Confirm your password"
                     startContent={<Lock className="w-4 h-4 text-gray-400" />}
                     type={isVisible ? "text" : "password"}
                     variant="bordered"
                     classNames={{
                       input: "text-gray-900 outline-none    ",
-                      inputWrapper: "border-gray-200 hover:border-blue-400 focus-within:border-blue-600",
+                      inputWrapper:
+                        "border-gray-200 hover:border-blue-400 focus-within:border-blue-600",
                     }}
                     required
                   />
                 )}
 
-                
-
                 {/* Submit Button */}
                 <Button
                   type="submit"
                   className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold h-12 text-base"
-                  isLoading={isLoading}
-                  disabled={isLoading}
+                  isLoading={isAuthenticating}
+                  disabled={isAuthenticating}
                 >
-                  {isLoading
+                  {isAuthenticating
                     ? selected === "signin"
                       ? "Signing In..."
                       : "Creating Account..."
                     : selected === "signin"
-                      ? "Sign In"
-                      : "Create Account"}
+                    ? "Sign In"
+                    : "Create Account"}
                 </Button>
               </form>
 
               {/* Footer Text */}
               <div className="text-center mt-6">
                 <p className="text-sm text-gray-600">
-                  {selected === "signin" ? "Don't have an account? " : "Already have an account? "}
+                  {selected === "signin"
+                    ? "Don't have an account? "
+                    : "Already have an account? "}
                   <button
                     type="button"
-                    onClick={() => setSelected(selected === "signin" ? "signup" : "signin")}
+                    onClick={() =>
+                      setSelected(selected === "signin" ? "signup" : "signin")
+                    }
                     className="text-blue-600 hover:text-blue-700 font-medium"
                   >
                     {selected === "signin" ? "Sign up" : "Sign in"}
@@ -175,7 +223,8 @@ export default function AuthPage() {
           {/* Security Notice */}
           <div className="text-center mt-6">
             <p className="text-xs text-gray-500">
-              Protected by industry-standard encryption. Your data is secure with us.
+              Protected by industry-standard encryption. Your data is secure
+              with us.
             </p>
           </div>
         </div>
@@ -187,5 +236,5 @@ export default function AuthPage() {
         <div className="absolute -bottom-40 -left-32 w-80 h-80 bg-gradient-to-tr from-purple-400/20 to-blue-400/20 rounded-full blur-3xl"></div>
       </div>
     </div>
-  )
+  );
 }
