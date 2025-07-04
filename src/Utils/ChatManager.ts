@@ -17,9 +17,14 @@ export class ChatManager {
   public sendMessage(
     setMessage: React.Dispatch<React.SetStateAction<Message[]>>,
     query: string,
-    index: string
+    index: string,
+    history: Message[]
   ) {
     // Add user message immediately
+    const queryToSend = JSON.stringify([
+      ...history,
+      { id: index, type: "user", content: query },
+    ]);
     setMessage((prev) => [
       ...prev,
       { id: index, type: "user", content: query },
@@ -34,7 +39,7 @@ export class ChatManager {
       // Send the query to server when connection opens
       this.ws?.send(
         JSON.stringify({
-          query: query,
+          query: queryToSend,
           folderId: this.folderId,
           message_id: index,
         })

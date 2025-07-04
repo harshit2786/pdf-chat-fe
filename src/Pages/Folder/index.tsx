@@ -82,7 +82,7 @@ export default function FolderPage({ params }: { params: { id: string } }) {
       return;
     }
     setInputMessage("");
-    messageManager.sendMessage(setMessages, query, String(messages.length));
+    messageManager.sendMessage(setMessages, query, String(messages.length),messages);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
