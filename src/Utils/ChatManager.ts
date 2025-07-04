@@ -49,7 +49,7 @@ export class ChatManager {
     this.ws.onmessage = (event) => {
       const newMes = JSON.parse(event.data);
 
-      // Only process if it's for the next message (current index + 1)
+      
       if (newMes.type === "error") {
         toast.error(newMes.data);
       }

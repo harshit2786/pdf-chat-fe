@@ -1,69 +1,36 @@
-# React + TypeScript + Vite
+# 📄 PDF Chat
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A web-based tool to chat with PDFs in a specific folder. Users can create folders, upload multiple PDFs, and ask questions that are answered using context extracted from those PDFs. Real-time chat responses are streamed using WebSockets.
 
-Currently, two official plugins are available:
+🎥 [Watch the demo](https://vimeo.com/1098860232)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## Expanding the ESLint configuration
+## 🌐 Environment Variables
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Set the following environment variables in your `.env` file before starting the frontend:
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```env
+REACT_APP_API_URI=http://localhost:8000/api/v1
+REACT_APP_WS_ADDRESS=ws://localhost:8000
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+REACT_APP_API_URI: Points to the REST API server (used for folder creation, uploading PDFs, etc.).
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+REACT_APP_WS_ADDRESS: Points to the WebSocket server used for streaming real-time chat responses.
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+🛠 Local Setup
+To run this project locally, you need to start the backend and the worker services:
+
+🧠 Backend: https://github.com/harshit2786/pdf-chat-be
+
+⚙️ Worker: https://github.com/harshit2786/pdf-chat-worker
+
+Make sure both are running before using the frontend.
+
+🚀 Features
+Folder-based PDF chat: Ask questions based on all PDFs inside a folder.
+
+Real-time WebSocket-based streaming responses.
+
+PDF upload, context indexing, and retrieval.
