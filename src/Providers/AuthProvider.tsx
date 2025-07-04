@@ -3,6 +3,7 @@ import { AuthContext, type userDetails } from "../hooks/useAuth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { setBaseUrl } from "../Utils/api";
 import { useNavigate } from "raviger";
+import FullScreenLoader from "../Components/Loader";
 
 const fetchCurrentUser = async (token: string): Promise<userDetails> => {
   const res = await fetch(setBaseUrl("/auth/currentuser"), {
@@ -101,7 +102,8 @@ export const AuthProvider = ({
     queryClient.clear(); // Clear cache
   }, [queryClient]);
 
-  if (isFetching && token) return <div>Loading...</div>;
+  if (isFetching && token) 
+    return <FullScreenLoader variant="default" isVisible />;
 
   return (
     <AuthContext.Provider

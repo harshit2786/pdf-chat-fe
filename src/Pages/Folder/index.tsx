@@ -5,7 +5,6 @@ import {
   Button,
   Card,
   CardBody,
-  Input,
   Dropdown,
   DropdownTrigger,
   DropdownMenu,
@@ -18,7 +17,6 @@ import {
   ModalBody,
   ModalFooter,
   useDisclosure,
-  Spinner,
   Divider,
   Textarea,
 } from "@heroui/react";
@@ -32,87 +30,38 @@ import {
   Plus,
   Bot,
   User,
-  Paperclip,
 } from "lucide-react";
 import { useAuthHook } from "../../hooks/useAuth";
-import { fetchSingleFolder, type SingleFolder } from "./api";
+import {
+  deletePdf,
+  downloadPdf,
+  fetchSingleFolder,
+  type SingleFolder,
+} from "./api";
 import { useQuery } from "@tanstack/react-query";
 import { formatTimestampToDate, setBaseUrl } from "../../Utils/api";
 import toast from "react-hot-toast";
+import { ChatManager } from "../../Utils/ChatManager";
+import FullScreenLoader from "../../Components/Loader";
+import { navigate } from "raviger";
 
-// Mock data for PDFs in folder
-const mockPDFs = [
-  {
-    id: 1,
-    name: "Research_Paper_AI_2024.pdf",
-    size: "2.4 MB",
-    uploadedAt: "2024-01-20",
-    pages: 24,
-  },
-  {
-    id: 2,
-    name: "Machine_Learning_Fundamentals.pdf",
-    size: "5.1 MB",
-    uploadedAt: "2024-01-18",
-    pages: 156,
-  },
-  {
-    id: 3,
-    name: "Deep_Learning_Architecture.pdf",
-    size: "3.8 MB",
-    uploadedAt: "2024-01-15",
-    pages: 89,
-  },
-  {
-    id: 4,
-    name: "Neural_Networks_Guide.pdf",
-    size: "1.9 MB",
-    uploadedAt: "2024-01-12",
-    pages: 45,
-  },
-  {
-    id: 5,
-    name: "Computer_Vision_Techniques.pdf",
-    size: "4.2 MB",
-    uploadedAt: "2024-01-10",
-    pages: 112,
-  },
-];
-
-// Mock chat messages
-const initialMessages = [
-  {
-    id: 1,
-    type: "ai" as const,
-    content:
-      "Hello! I'm ready to help you with questions about your PDFs. What would you like to know?",
-    timestamp: new Date(Date.now() - 1000 * 60 * 30),
-  },
-];
-
-interface Message {
-  id: number;
+export interface Message {
+  id: string;
   type: "user" | "ai";
   content: string;
-  timestamp: Date;
-  sources?: string[];
 }
 
 export default function FolderPage({ params }: { params: { id: string } }) {
-  const { token, user } = useAuthHook();
-  const {
-    data: folderResp,
-    refetch,
-    isFetching,
-  } = useQuery<SingleFolder>({
+  const { token } = useAuthHook();
+  const messageManager = new ChatManager(params.id);
+  const { data: folderResp, refetch } = useQuery<SingleFolder>({
     queryKey: ["folder", params.id],
     queryFn: () => fetchSingleFolder(token!, params.id),
     enabled: true,
     retry: false,
   });
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -126,35 +75,14 @@ export default function FolderPage({ params }: { params: { id: string } }) {
     scrollToBottom();
   }, [messages]);
 
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim()) return;
+  const handleSendMessage = () => {
+    const query = inputMessage.trim();
 
-    const userMessage: Message = {
-      id: Date.now(),
-      type: "user",
-      content: inputMessage,
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
+    if (query === "") {
+      return;
+    }
     setInputMessage("");
-    setIsLoading(true);
-
-    // Simulate AI response
-    setTimeout(() => {
-      const aiMessage: Message = {
-        id: Date.now() + 1,
-        type: "ai",
-        content: `Based on your PDFs, I can help you with that question. Here's what I found in your documents...`,
-        timestamp: new Date(),
-        sources: [
-          "Research_Paper_AI_2024.pdf",
-          "Machine_Learning_Fundamentals.pdf",
-        ],
-      };
-      setMessages((prev) => [...prev, aiMessage]);
-      setIsLoading(false);
-    }, 2000);
+    messageManager.sendMessage(setMessages, query, String(messages.length));
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -212,15 +140,8 @@ export default function FolderPage({ params }: { params: { id: string } }) {
     setSelectedFiles(null);
     onOpenChange(); // Close modal
   };
-
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
   if (!folderResp) {
-    return <>Loading...</>;
+    return <FullScreenLoader variant="chat" isVisible />;
   }
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -230,6 +151,7 @@ export default function FolderPage({ params }: { params: { id: string } }) {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <Button
+                onPress={() => navigate("/")}
                 variant="light"
                 size="sm"
                 startContent={<ArrowLeft className="w-4 h-4" />}
@@ -319,7 +241,9 @@ export default function FolderPage({ params }: { params: { id: string } }) {
                                 {pdf.status}
                               </Chip>
                             </span>
-                            {pdf.status === "PROCESSED" && <span>{pdf.totalPages} pages</span>}
+                            {pdf.status === "PROCESSED" && (
+                              <span>{pdf.totalPages} pages</span>
+                            )}
                           </div>
                           <div className="text-xs text-gray-400 mt-1">
                             {formatTimestampToDate(pdf.uploadedAt)}
@@ -337,6 +261,10 @@ export default function FolderPage({ params }: { params: { id: string } }) {
                           </DropdownTrigger>
                           <DropdownMenu aria-label="PDF actions">
                             <DropdownItem
+                              onPress={async () => {
+                                await downloadPdf(token!, pdf.id);
+                                await refetch();
+                              }}
                               key="download"
                               startContent={<Download className="w-4 h-4" />}
                             >
@@ -344,6 +272,10 @@ export default function FolderPage({ params }: { params: { id: string } }) {
                             </DropdownItem>
                             <DropdownItem
                               key="delete"
+                              onPress={async () => {
+                                await deletePdf(token!, pdf.id);
+                                await refetch();
+                              }}
                               startContent={<Trash2 className="w-4 h-4" />}
                               className="text-danger"
                               color="danger"
@@ -425,29 +357,11 @@ export default function FolderPage({ params }: { params: { id: string } }) {
                         {message.content}
                       </p>
                     </div>
-                    {message.sources && (
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {message.sources.map((source, index) => (
-                          <Chip
-                            key={index}
-                            size="sm"
-                            variant="flat"
-                            className="text-xs"
-                          >
-                            <Paperclip className="w-3 h-3 mr-1" />
-                            {source}
-                          </Chip>
-                        ))}
-                      </div>
-                    )}
-                    <span className="text-xs text-gray-500 mt-1">
-                      {formatTime(message.timestamp)}
-                    </span>
                   </div>
                 </div>
               </div>
             ))}
-            {isLoading && (
+            {/* {isLoading && (
               <div className="flex justify-start">
                 <div className="flex space-x-3 max-w-3xl">
                   <Avatar
@@ -460,7 +374,7 @@ export default function FolderPage({ params }: { params: { id: string } }) {
                   </div>
                 </div>
               </div>
-            )}
+            )} */}
             <div ref={messagesEndRef} />
           </div>
 
@@ -478,12 +392,14 @@ export default function FolderPage({ params }: { params: { id: string } }) {
                   inputWrapper:
                     "border-gray-200 hover:border-blue-400 focus-within:border-blue-600",
                 }}
-                disabled={isLoading}
+                disabled={messageManager.checkConnection()}
               />
               <Button
-                onClick={handleSendMessage}
+                onPress={handleSendMessage}
                 className="bg-gradient-to-r from-blue-600 to-purple-600 text-white min-w-0 px-4"
-                isDisabled={!inputMessage.trim() || isLoading}
+                isDisabled={
+                  !inputMessage.trim() || messageManager.checkConnection()
+                }
               >
                 <Send className="w-4 h-4" />
               </Button>

@@ -3,7 +3,8 @@ import { createContext, useContext } from "react";
 export interface userDetails {
     id : number,
     name : string,
-    email : string
+    email : string,
+    avatar : string
 }
 
 interface signInCred {

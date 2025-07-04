@@ -38,6 +38,7 @@ import {
   createFolder,
   deleteFolder,
   fetchFolderList,
+  updateAvatar,
   updateFolder,
   type FinalListResponse,
 } from "./api";
@@ -46,6 +47,8 @@ import { formatTimestampToDate } from "../../Utils/api";
 import ColorPicker from "../../Components/ColorPicker";
 import toast from "react-hot-toast";
 import { navigate } from "raviger";
+import FullScreenLoader from "../../Components/Loader";
+import AvatarPicker from "../../Components/AvatarPicker";
 
 export default function DashboardPage() {
   const [selectedUpdateId, setSelectedUpdateId] = useState<number | null>(null);
@@ -62,6 +65,8 @@ export default function DashboardPage() {
     enabled: false,
     retry: false,
   });
+  const [avatarOpen, setAvatarOpen] = useState(false);
+  console.log("userAvatar", user?.avatar);
   const handleMutate = async () => {
     if (!newFolderDescription.trim() || !newFolderName.trim()) {
       toast.error("Please fill required fields");
@@ -92,7 +97,10 @@ export default function DashboardPage() {
   const [newFolderName, setNewFolderName] = useState("");
   const [newFolderDescription, setNewFolderDescription] = useState("");
   const [newFolderColor, setNewFolderColor] = useState("bg-blue-500");
-
+  const handleAvatarChange = async (avatarId: string, avatarSrc: string) => {
+    await updateAvatar(token!, avatarId);
+    window.location.reload();
+  };
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   useEffect(() => {
     const debounceTimeout = setTimeout(() => {
@@ -112,11 +120,19 @@ export default function DashboardPage() {
   }, [searchQuery]);
 
   if (!folderResp) {
-    return <>Loading...</>;
+    return <FullScreenLoader isVisible />;
   }
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
+      {user && (
+        <AvatarPicker
+          onAvatarSelect={handleAvatarChange}
+          isOpen={avatarOpen}
+          onOpenChange={setAvatarOpen}
+          currentAvatarId={user?.avatar}
+        />
+      )}
       <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-40">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
@@ -131,14 +147,14 @@ export default function DashboardPage() {
             {/* User Menu */}
             <Dropdown placement="bottom-end">
               <DropdownTrigger>
-                <Button variant="light" className="p-0 min-w-0 h-auto">
+                <Button variant="light" className="p-2 min-w-0 h-auto">
                   <div className="flex items-center space-x-3">
                     <span className="text-sm font-medium text-gray-700 hidden sm:block">
                       {user?.name}
                     </span>
                     <Avatar
                       size="sm"
-                      src="/placeholder.svg?height=32&width=32"
+                      src={`${user?.avatar}.svg?height=32&width=32`}
                       className="w-8 h-8"
                       fallback="JD"
                     />
@@ -147,10 +163,11 @@ export default function DashboardPage() {
               </DropdownTrigger>
               <DropdownMenu aria-label="User menu">
                 <DropdownItem
+                  onPress={() => setAvatarOpen(true)}
                   key="profile"
                   startContent={<Settings className="w-4 h-4" />}
                 >
-                  Profile Settings
+                  Change Avatar
                 </DropdownItem>
                 <DropdownItem
                   onPress={signOut}

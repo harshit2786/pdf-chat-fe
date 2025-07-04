@@ -100,3 +100,24 @@ export const deleteFolder = async (
   }
   return;
 };
+
+export const updateAvatar = async (
+  token: string,
+  avatar: string,
+): Promise<void> => {
+  toast.loading("Updating folder...");
+  const res = await fetch(setBaseUrl(`/auth/avatar`), {
+    method: "PUT",
+    body: JSON.stringify({ avatar}),
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "content-type": "application/json",
+    },
+  });
+
+  if (!res.ok) {
+    toast.error("Failed to update avatar");
+    throw new Error("Failed to update folder");
+  }
+  return;
+};
